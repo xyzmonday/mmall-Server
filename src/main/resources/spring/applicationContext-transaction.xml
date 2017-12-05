@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/aop 
+                           http://www.springframework.org/schema/aop/spring-aop.xsd
+                           http://www.springframework.org/schema/context 
+                           http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/tx 
+                           http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- 事务管理器 1. 接口 PlatformTransactionManager:该接口声明了事务管理器需要实现的方法。一般的实现类有 DataSourceTransactionManager,HibernateTransactionManager -->
+    <!-- 2.TransactionDefinition事务定义，具体分三类，isolation,propagation,readOnly -->
+    <bean id="txManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!-- 数据源 -->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <!-- 通过注解的方式实现事务管理 -->
+    <tx:annotation-driven/>
+
+    <!-- 通知 。通过aspect来管理事务。Spring会自动扫描TransactionProxyBeanFactory
+        生成TransactionInterceptor实现AOP
+    -->
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <!-- tx:method的属性
+                1. isolation
+                2. propagation
+                3. readOnly
+                4. rollback-for:对于那种异常进行回滚
+                5. no-rollback-for
+             -->
+            <!-- 传播行为 -->
+            <tx:method name="*" propagation="REQUIRED"/>
+            <tx:method name="find*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="query*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="select*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="get*" propagation="SUPPORTS" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--支持注解AOP-->
+   <!-- <context:annotation-config/>
+    <context:component-scan base-package="com.yff.aop"/>-->
+    <!--
+        proxy-target-class属性，默认为false，表示使用jdk动态代理织入增强，当配为<aop:aspectj-autoproxy
+        poxy-target-class="true"/>时，表示使用CGLib动态代理技术织入增强。不过即使proxy-target-class设置为false，如果目标类没有声明接口，则spring将自动使用CGLib动态代理。
+    -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+
+    <!-- 切面 -->
+    <!-- advisor是一个特殊的aspect，它只能有一个advice和一个pointcut -->
+    <aop:config>
+        <aop:pointcut id="pointcut-service" expression="execution(* com.yff.service.*.*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut-service" order="2"/>
+    </aop:config>
+
+
+</beans>
