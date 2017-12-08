@@ -145,19 +145,6 @@
         </dependency>
 
 
-        <!-- mybatis pager -->
-        <dependency>
-            <groupId>com.github.pagehelper</groupId>
-            <artifactId>pagehelper</artifactId>
-            <version>4.1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.miemiedev</groupId>
-            <artifactId>mybatis-paginator</artifactId>
-            <version>1.2.17</version>
-        </dependency>
-
         <!--分页插件-->
         <dependency>
             <groupId>com.github.pagehelper</groupId>
@@ -169,6 +156,13 @@
             <groupId>com.github.jsqlparser</groupId>
             <artifactId>jsqlparser</artifactId>
             <version>0.9.4</version>
+        </dependency>
+
+        <!-- slf4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
         </dependency>
 
 
@@ -273,6 +267,9 @@
                     <source>1.8</source>
                     <target>1.8</target>
                     <encoding>UTF-8</encoding>
+                    <compilerArguments>
+                        <extdirs>${project.basedir}/src/main/webapp/WEB-INF/lib</extdirs>
+                    </compilerArguments>
                 </configuration>
             </plugin>
 
@@ -324,6 +321,8 @@
                     <configuration>
                         <port>8090</port>
                         <path>/</path>
+                        <!--解决get方法Tomcat乱码问题-->
+                        <uriEncoding>UTF-8</uriEncoding>
                     </configuration>
                 </plugin>
             </plugins>

@@ -26,13 +26,14 @@ public class CategoryServiceImpl implements ICategoryService {
     @Override
     public ServerResponse<String> addCategory(String categoryName, Integer parentId) {
         if (parentId == null || StringUtils.isBlank(categoryName)) {
-            return ServerResponse.createByErrorMessage("参数错误");
+            return ServerResponse.createByErrorMessage("添加品类参数错误");
         }
 
         Category category = new Category();
         category.setName(categoryName);
         category.setParentId(parentId);
         category.setCreateTime(new Date());
+        category.setUpdateTime(new Date());
         category.setStatus(true);
         int result = categoryMapper.insert(category);
         if (result <= 0) {
@@ -47,8 +48,8 @@ public class CategoryServiceImpl implements ICategoryService {
             return ServerResponse.createByErrorMessage("参数错误");
         }
         Category category = new Category();
-        category.setName(categoryName);
         category.setId(categoryId);
+        category.setName(categoryName);
         int result = categoryMapper.updateByPrimaryKeySelective(category);
         if (result <= 0) {
             return ServerResponse.createByErrorMessage("更新失败");

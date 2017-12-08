@@ -34,7 +34,7 @@ public interface ICategoryService {
     ServerResponse<List<Category>> getChildrenParallelCategoryByCategoryId(Integer parentId);
 
     /**
-     * 递归获取所有子节点的id
+     * 递归获取所有子节点的id（包括自己的id）
      * @param categoryId
      * @return
      */

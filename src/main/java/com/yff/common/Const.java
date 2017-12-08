@@ -139,7 +139,5 @@ public class Const {
             }
             throw new RuntimeException("么有找到对应的枚举");
         }
-
     }
-
 }

@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Created by geely
+ * Created by monday
  */
 public class FTPUtil {
 
@@ -19,6 +19,12 @@ public class FTPUtil {
     private static String ftpIp = PropertiesUtil.getProperty("ftp.server.ip");
     private static String ftpUser = PropertiesUtil.getProperty("ftp.user");
     private static String ftpPass = PropertiesUtil.getProperty("ftp.pass");
+
+    private String ip;
+    private int port;
+    private String user;
+    private String pwd;
+    private FTPClient ftpClient;
 
     public FTPUtil(String ip,int port,String user,String pwd){
         this.ip = ip;
@@ -29,7 +35,7 @@ public class FTPUtil {
     public static boolean uploadFile(List<File> fileList) throws IOException {
         FTPUtil ftpUtil = new FTPUtil(ftpIp,21,ftpUser,ftpPass);
         logger.info("开始连接ftp服务器");
-        boolean result = ftpUtil.uploadFile("img",fileList);
+        boolean result = ftpUtil.uploadFile("/ftpfile/image",fileList);
         logger.info("开始连接ftp服务器,结束上传,上传结果:{}");
         return result;
     }
@@ -78,21 +84,17 @@ public class FTPUtil {
         return isSuccess;
     }
 
-
-
-
-
-
-
-
-
-
-
-    private String ip;
-    private int port;
-    private String user;
-    private String pwd;
-    private FTPClient ftpClient;
+    public static void main(String[] args) {
+        FTPClient ftpClient = new FTPClient();
+        try {
+            ftpClient.connect("139.196.141.224");
+            boolean flag = ftpClient.login("yuanfengfan", "yff3445683");
+            System.out.println(flag);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+    }
 
     public String getIp() {
         return ip;

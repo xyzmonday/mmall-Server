@@ -1,42 +1,35 @@
 package com.yff.controller;
 
+import com.github.pagehelper.PageInfo;
 import com.yff.common.Const;
 import com.yff.common.ResponseCode;
 import com.yff.common.ServerResponse;
-import com.yff.entity.Category;
 import com.yff.entity.User;
-import com.yff.service.ICategoryService;
+import com.yff.service.IOrderService;
 import com.yff.service.IUserService;
-import org.apache.ibatis.annotations.Param;
+import com.yff.vo.OrderVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpSession;
-import java.util.List;
 
-/**
- * 分类管理
- */
 @Controller
-@RequestMapping("/manage/category")
-public class CategoryManagerController {
+@RequestMapping("/manage/order")
+public class OrderManageController {
 
+    @Autowired
+    private IOrderService iOrderService;
     @Autowired
     private IUserService iUserService;
 
-    @Autowired
-    private ICategoryService iCategoryService;
-
-    /**
-     * 增加分类
-     */
-    @GetMapping("/addCategory")
+    @GetMapping("/list")
     @ResponseBody
-    public ServerResponse<String> addCategory(HttpSession session,
-                                              @RequestParam("categoryName") String categoryName,
-                                              @RequestParam(value = "parentId", defaultValue = "0") Integer parentId) {
-        //1. 是否登陆
+    public ServerResponse<PageInfo<OrderVo>> getPageOrderList(HttpSession session, @RequestParam(value = "pageNum", required = false
+            , defaultValue = "1") Integer pageNum, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "用户未登录，请先登录");
@@ -46,22 +39,13 @@ public class CategoryManagerController {
         if (!checkAdminRole.isSuccess()) {
             return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
         }
-        //3.添加分类
-        return iCategoryService.addCategory(categoryName, parentId);
+        return iOrderService.manageList(pageNum, pageSize);
     }
 
-    /**
-     * 更新分类名称
-     *
-     * @param session
-     * @param categoryName
-     * @param parentId
-     * @return
-     */
-    @GetMapping("/updateCategoryName")
+
+    @GetMapping("/detail")
     @ResponseBody
-    public ServerResponse<String> updateCategoryName(HttpSession session, String categoryName,
-                                                     @RequestParam(value = "parentId", defaultValue = "0") Integer parentId) {
+    public ServerResponse<OrderVo> getOrderDetail(HttpSession session, Long orderNo) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "用户未登录，请先登录");
@@ -71,20 +55,15 @@ public class CategoryManagerController {
         if (!checkAdminRole.isSuccess()) {
             return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
         }
-        return iCategoryService.updateCategoryName(categoryName, parentId);
+        return iOrderService.manageOrderDetail(orderNo);
     }
 
-    /**
-     * 获取与当前节点平级的所有节点
-     *
-     * @param session
-     * @param categoryId
-     * @return
-     */
-    @GetMapping("/getCategory")
+
+    @GetMapping("/search")
     @ResponseBody
-    public ServerResponse<List<Category>> getChildrenParallelCategory(HttpSession session,
-                                                                      @RequestParam(value = "categoryId", defaultValue = "0") Integer categoryId) {
+    public ServerResponse<PageInfo<OrderVo>> orderSearch(HttpSession session, Long orderNo,
+                                                         @RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
+                                                         @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "用户未登录，请先登录");
@@ -94,19 +73,12 @@ public class CategoryManagerController {
         if (!checkAdminRole.isSuccess()) {
             return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
         }
-        return iCategoryService.getChildrenParallelCategoryByCategoryId(categoryId);
+        return iOrderService.manageSearch(orderNo, pageNum, pageSize);
     }
 
-    /**
-     * 获取当前节点的子节点，并且递归它所有的子节点的孩子节点
-     *
-     * @param session
-     * @param categoryId
-     * @return
-     */
-    @GetMapping("/getDeepCategory")
+    @GetMapping("/sendGoods")
     @ResponseBody
-    public ServerResponse<List<Integer>> getCategoryAndChildrenCategory(HttpSession session, @RequestParam(value = "categoryId", defaultValue = "0") Integer categoryId) {
+    public ServerResponse<String> sendGoods(HttpSession session, Long orderNo) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "用户未登录，请先登录");
@@ -116,10 +88,8 @@ public class CategoryManagerController {
         if (!checkAdminRole.isSuccess()) {
             return ServerResponse.createByErrorMessage("不是管理员，无权限操作");
         }
-        return iCategoryService.getCategoryAndChildrenCategoryByCategoryId(categoryId);
+        return iOrderService.manageSendGoods(orderNo);
     }
+
 
 }
-
-
-
