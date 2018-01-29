@@ -58,7 +58,7 @@ public interface IOrderService {
      * @param pageSize
      * @return
      */
-    ServerResponse<PageInfo<OrderVo>> getOrderList(Integer userId,Integer pageNum,Integer pageSize);
+    ServerResponse<PageInfo> getOrderList(Integer userId,Integer pageNum,Integer pageSize);
 
     /**
      * 管理员获取订单列表
@@ -66,7 +66,7 @@ public interface IOrderService {
      * @param pageSize
      * @return
      */
-    ServerResponse<PageInfo<OrderVo>> manageList(Integer pageNum,Integer pageSize);
+    ServerResponse<PageInfo> manageList(Integer pageNum,Integer pageSize);
 
 
     /**

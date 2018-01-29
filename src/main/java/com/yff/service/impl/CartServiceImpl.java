@@ -10,6 +10,7 @@ import com.yff.entity.Cart;
 import com.yff.entity.Product;
 import com.yff.service.ICartService;
 import com.yff.util.BigDecimalUtil;
+import com.yff.util.PropertiesUtil;
 import com.yff.vo.CartProductVo;
 import com.yff.vo.CartVo;
 import org.apache.commons.lang3.StringUtils;
@@ -30,7 +31,7 @@ public class CartServiceImpl implements ICartService {
     private ProductMapper productMapper;
 
     @Override
-    public ServerResponse<CartVo> add(Integer userId, Integer count, Integer productId) {
+    public ServerResponse<CartVo> add(Integer userId, Integer productId, Integer count) {
         if (productId == null || count == 0) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),
                     ResponseCode.ILLEGAL_ARGUMENT.getDesc());
@@ -40,17 +41,16 @@ public class CartServiceImpl implements ICartService {
         Cart cart = cartMapper.selectCart(userId, productId);
         if (cart == null) {
             //2.如果没有，那么新建一个购物车，将该产品放入该购物车
-
-        } else {  cart = new Cart();
-            cart.setQuantity(count);
-            cart.setProductId(productId);
-            cart.setChecked(Const.Cart.CHECKED);
-            cart.setUserId(userId);
-            cart.setCreateTime(new Date());
-            cart.setUpdateTime(new Date());
-            cartMapper.insertSelective(cart);
+            Cart cartItem = new Cart();
+            cartItem.setQuantity(count);
+            cartItem.setChecked(Const.Cart.CHECKED);
+            cartItem.setProductId(productId);
+            cartItem.setUserId(userId);
+            cartMapper.insertSelective(cartItem);
+        } else {
             //3.如果已经存在
-            cart.setQuantity(cart.getQuantity() + count);
+            count = cart.getQuantity() + count;
+            cart.setQuantity(count);
             cartMapper.updateByPrimaryKeySelective(cart);
         }
         return this.list(userId);
@@ -95,7 +95,8 @@ public class CartServiceImpl implements ICartService {
         if (userId == null) {
             return ServerResponse.createBySuccess(0);
         }
-        return ServerResponse.createBySuccess(cartMapper.selectCartProductCount(userId));
+        int result = cartMapper.selectCartProductCount(userId);
+        return ServerResponse.createBySuccess(result);
     }
 
     @Override
@@ -110,50 +111,50 @@ public class CartServiceImpl implements ICartService {
         List<Cart> carts = cartMapper.selectCartByUserId(useId);
         List<CartProductVo> cartProductVoList = new ArrayList<>();
         BigDecimal cartTotalPrice = new BigDecimal("0");
-        if (carts != null) {
-            for (Cart cart : carts) {
-                //组装cart字段给CartProductVo
-                CartProductVo cartProductVo = new CartProductVo();
-                cartProductVo.setId(cart.getId());
-                cartProductVo.setUserId(cart.getUserId());
-                cartProductVo.setProductId(cart.getProductId());
 
-                //组装Product字段给CartProductVo
-                Product product = productMapper.selectByPrimaryKey(cart.getProductId());
-                if (product != null) {
-                    cartProductVo.setProductMainImage(product.getMainImage());
-                    cartProductVo.setProductName(product.getName());
-                    cartProductVo.setProductSubtitle(product.getSubtitle());
-                    cartProductVo.setProductStatus(product.getStatus());
-                    cartProductVo.setProductPrice(product.getPrice());
-                    cartProductVo.setProductStock(product.getStock());
-                    //判断库存
-                    int buyLimitCount = 0;
-                    if (product.getStock() >= cart.getQuantity()) {
-                        //库存充足的时候
-                        buyLimitCount = cart.getQuantity();
-                        cartProductVo.setLimitQuantity(Const.Cart.LIMIT_NUM_SUCCESS);
-                    } else {
-                        buyLimitCount = product.getStock();
-                        cartProductVo.setLimitQuantity(Const.Cart.LIMIT_NUM_FAIL);
-                        //购物车中更新有效库存
-                        Cart cartForQuantityUpdate = new Cart();
-                        cartForQuantityUpdate.setId(cart.getId());
-                        cartForQuantityUpdate.setQuantity(buyLimitCount);
-                        cartMapper.updateByPrimaryKeySelective(cartForQuantityUpdate);
-                    }
+        for (Cart cart : carts) {
+            //组装cart字段给CartProductVo
+            CartProductVo cartProductVo = new CartProductVo();
+            cartProductVo.setId(cart.getId());
+            cartProductVo.setUserId(cart.getUserId());
+            cartProductVo.setProductId(cart.getProductId());
 
-                    //设置cartProductVo
-                    cartProductVo.setQuantity(buyLimitCount);
-                    //计算该购物车总价
-                    cartProductVo.setProductTotalPrice(BigDecimalUtil.mul(product.getPrice().doubleValue(), cartProductVo.getQuantity()));
-                    //购物车全选
-                    cartProductVo.setProductChecked(cart.getChecked());
+            //组装Product字段给CartProductVo
+            Product product = productMapper.selectByPrimaryKey(cart.getProductId());
+            if (product != null) {
+                cartProductVo.setProductMainImage(product.getMainImage());
+                cartProductVo.setProductName(product.getName());
+                cartProductVo.setProductSubtitle(product.getSubtitle());
+                cartProductVo.setProductStatus(product.getStatus());
+                cartProductVo.setProductPrice(product.getPrice());
+                cartProductVo.setProductStock(product.getStock());
+                //判断库存
+                int buyLimitCount = 0;
+                if (product.getStock() >= cart.getQuantity()) {
+                    //库存充足的时候
+                    buyLimitCount = cart.getQuantity();
+                    cartProductVo.setLimitQuantity(Const.Cart.LIMIT_NUM_SUCCESS);
+                } else {
+                    buyLimitCount = product.getStock();
+                    cartProductVo.setLimitQuantity(Const.Cart.LIMIT_NUM_FAIL);
+                    //购物车中更新有效库存
+                    Cart cartForQuantityUpdate = new Cart();
+                    cartForQuantityUpdate.setId(cart.getId());
+                    cartForQuantityUpdate.setQuantity(buyLimitCount);
+                    cartMapper.updateByPrimaryKeySelective(cartForQuantityUpdate);
                 }
+
+                //设置cartProductVo
+                cartProductVo.setQuantity(buyLimitCount);
+                //计算该购物车总价
+                cartProductVo.setProductTotalPrice(BigDecimalUtil.mul(product.getPrice().doubleValue(), cartProductVo.getQuantity()));
+                //购物车全选
+                cartProductVo.setProductChecked(cart.getChecked());
 
                 //如果该购物车被选中，那么该购物车里面的产品将被计算到购物车总价中
                 if (cart.getChecked() == Const.Cart.CHECKED) {
-                    cartTotalPrice = BigDecimalUtil.add(cartTotalPrice.doubleValue(),cartProductVo.getProductTotalPrice().doubleValue());
+                    //如果已经勾选,增加到整个的购物车总价中
+                    cartTotalPrice = BigDecimalUtil.add(cartTotalPrice.doubleValue(), cartProductVo.getProductTotalPrice().doubleValue());
                 }
                 cartProductVoList.add(cartProductVo);
             }
@@ -163,6 +164,7 @@ public class CartServiceImpl implements ICartService {
         cartVo.setCartTotalPrice(cartTotalPrice);
         cartVo.setCartProductVoList(cartProductVoList);
         cartVo.setAllChecked(getAllCheckedStatus(useId));
+        cartVo.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix"));
         return cartVo;
     }
 

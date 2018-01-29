@@ -1,5 +1,6 @@
 package com.yff.service.impl;
 
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.github.pagehelper.util.StringUtil;
@@ -102,7 +103,9 @@ public class ProductServiceImpl implements IProductService {
             ProductListVo productListVo = assembleProductListVo(product);
             productListVoList.add(productListVo);
         }
-        PageInfo<ProductListVo> pageInfo = new PageInfo<>(productListVoList);
+        //注意这里必须使用mybatis查询出来的集合对象去初始化PageInfo，因为mybatis查询查来的对象具有pages
+        PageInfo pageInfo = new PageInfo<>(productList);
+        pageInfo.setList(productListVoList);
         return ServerResponse.createBySuccess(pageInfo);
     }
 
@@ -117,7 +120,8 @@ public class ProductServiceImpl implements IProductService {
             ProductListVo productListVo = assembleProductListVo(product);
             productListVoList.add(productListVo);
         }
-        PageInfo<ProductListVo> pageInfo = new PageInfo<>(productListVoList);
+        PageInfo pageInfo = new PageInfo<>(productList);
+        pageInfo.setList(productListVoList);
         return ServerResponse.createBySuccess(pageInfo);
     }
 
@@ -140,7 +144,8 @@ public class ProductServiceImpl implements IProductService {
 
     @Override
     public ServerResponse<PageInfo<ProductListVo>> getProductByKeywordAndCategoryId(String keyword, Integer categoryId,
-                                                                                    Integer pageNum, Integer pageSize, String orderBy) {
+                                                                                    Integer pageNum, Integer pageSize,
+                                                                                    String orderBy) {
         if (StringUtils.isBlank(keyword) && categoryId == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),
                     ResponseCode.ILLEGAL_ARGUMENT.getDesc());
@@ -170,12 +175,14 @@ public class ProductServiceImpl implements IProductService {
         }
         //dao查询，mybatis需要处理keyword为null,‘’以及categoryIdList为empty的情况
         List<Product> products = productMapper.selectProductByKeywordAndCategoryIds(keyword, categoryIdList);
+        //Page<ProductListVo> productListVoList = new Page<>(pageNum,pageSize);
         List<ProductListVo> productListVoList = new ArrayList<>();
         for (Product product : products) {
             ProductListVo productListVo = assembleProductListVo(product);
             productListVoList.add(productListVo);
         }
-        PageInfo<ProductListVo> pageInfo = new PageInfo<>(productListVoList);
+        PageInfo pageInfo = new PageInfo<>(products);
+        pageInfo.setList(productListVoList);
         return ServerResponse.createBySuccess(pageInfo);
     }
 

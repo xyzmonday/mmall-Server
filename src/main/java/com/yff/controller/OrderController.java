@@ -81,7 +81,7 @@ public class OrderController {
 
     @GetMapping("/list")
     @ResponseBody
-    public ServerResponse<PageInfo<OrderVo>> getPageOrderList(HttpSession session, @RequestParam(value = "pageNum", required = false
+    public ServerResponse<PageInfo> getPageOrderList(HttpSession session, @RequestParam(value = "pageNum", required = false
             , defaultValue = "1") Integer pageNum, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {

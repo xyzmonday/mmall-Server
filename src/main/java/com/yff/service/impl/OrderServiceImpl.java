@@ -13,7 +13,6 @@ import com.alipay.demo.trade.service.impl.AlipayMonitorServiceImpl;
 import com.alipay.demo.trade.service.impl.AlipayTradeServiceImpl;
 import com.alipay.demo.trade.service.impl.AlipayTradeWithHBServiceImpl;
 import com.alipay.demo.trade.utils.ZxingUtils;
-import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
@@ -355,21 +354,23 @@ public class OrderServiceImpl implements IOrderService {
 
 
     @Override
-    public ServerResponse<PageInfo<OrderVo>> getOrderList(Integer userId, Integer pageNum, Integer pageSize) {
+    public ServerResponse<PageInfo> getOrderList(Integer userId, Integer pageNum, Integer pageSize) {
         //1.获取订单集合
         PageHelper.startPage(pageNum, pageSize);
         List<Order> orderList = orderMapper.selectByUserId(userId);
         List<OrderVo> orderVoList = this.assembleOrderVo(userId, orderList);
-        PageInfo<OrderVo> pageInfo = new PageInfo<>(orderVoList);
+        PageInfo pageInfo = new PageInfo<>(orderList);
+        pageInfo.setList(orderVoList);
         return ServerResponse.createBySuccess(pageInfo);
     }
 
     @Override
-    public ServerResponse<PageInfo<OrderVo>> manageList(Integer pageNum, Integer pageSize) {
+    public ServerResponse<PageInfo> manageList(Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
         List<Order> orderList = orderMapper.selectAll();
         List<OrderVo> orderVoList = this.assembleOrderVo(null, orderList);
-        PageInfo<OrderVo> pageInfo = new PageInfo<>(orderVoList);
+        PageInfo pageInfo = new PageInfo<>(orderList);
+        pageInfo.setList(orderVoList);
         return ServerResponse.createBySuccess(pageInfo);
 
     }
@@ -411,7 +412,8 @@ public class OrderServiceImpl implements IOrderService {
         if (order != null) {
             List<OrderItem> orderItems = orderItemMapper.selectByOrderNo(orderNo);
             OrderVo orderVo = this.assembleOrderVo(order, orderItems);
-            PageInfo<OrderVo> pageInfo = new PageInfo<>(Lists.newArrayList(orderVo));
+            PageInfo pageInfo = new PageInfo(Lists.newArrayList(order));
+            pageInfo.setList(Lists.newArrayList(orderVo));
             return ServerResponse.createBySuccess(pageInfo);
         }
         return ServerResponse.createByErrorMessage("订单不存在");

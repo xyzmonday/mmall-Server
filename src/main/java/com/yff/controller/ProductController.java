@@ -41,7 +41,7 @@ public class ProductController {
      * @param orderBy
      * @return
      */
-    @GetMapping("list")
+    @GetMapping("/list")
     @ResponseBody
     public ServerResponse<PageInfo<ProductListVo>> search(@RequestParam(value = "keyword", required = false) String keyword,
                                                           @RequestParam(value = "categoryId", required = false) Integer categoryId,

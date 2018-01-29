@@ -225,7 +225,7 @@
         select
         <include refid="Base_Column_List"/>
         from mmall_shipping
-        where id = #{id,jdbcType=INTEGER}
+        where id = #{shippingId,jdbcType=INTEGER}
         and user_id = #{userId,jdbcType=INTEGER}
     </select>
 
